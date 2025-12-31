@@ -100,6 +100,39 @@ public actor Connection {
 		return try response.recode(to: [UserBan].self)
 	}
 
+	public func getIPBanlist() async throws -> [IPBan] {
+		let response = try await request("minecraft:ip_bans")
+		return try response.recode(to: [IPBan].self)
+	}
+
+	public func setIPBanlist(to bans: [IPBan]) async throws -> [IPBan] {
+		let response = try await request("minecraft:ip_bans/set", params: .named(["banlist": JSONValue(recoding: bans)]))
+		return try response.recode(to: [IPBan].self)
+	}
+
+	public func addToIPBanlist(from players: [IncomingIPBan]) async throws -> [IPBan] {
+		let response = try await request("minecraft:ip_bans/add", params: .named(["add": JSONValue(recoding: players)]))
+		return try response.recode(to: [IPBan].self)
+	}
+
+	public func addToIPBanlist(_ player: IncomingIPBan) async throws -> [IPBan] {
+		try await addToIPBanlist(from: [player])
+	}
+
+	public func removeFromIPBanlist(from players: [String]) async throws -> [IPBan] {
+		let response = try await request("minecraft:ip_bans/remove", params: .named(["ip": JSONValue(recoding: players)]))
+		return try response.recode(to: [IPBan].self)
+	}
+
+	public func removeFromIPBanlist(_ player: String) async throws -> [IPBan] {
+		try await removeFromIPBanlist(from: [player])
+	}
+
+	public func clearIPBanlist() async throws -> [IPBan] {
+		let response = try await request("minecraft:ip_bans/clear")
+		return try response.recode(to: [IPBan].self)
+	}
+
 	public func getStatus() async throws -> ServerState {
 		let response = try await request("minecraft:server/status")
 		return try response.recode(to: ServerState.self)

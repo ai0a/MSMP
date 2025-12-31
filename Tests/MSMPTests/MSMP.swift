@@ -52,4 +52,20 @@ import MSMP
 		
 		#expect(try await connection.setBanlist(to: originalBanlist) == originalBanlist)
 	}
+
+	@Test func testIPBanlist() async throws {
+		let originalBanlist = try await connection.getIPBanlist()
+		#expect(try await connection.setIPBanlist(to: [
+			.init(reason: "Get banned lmao!", source: "Automated test", ip: "127.0.0.1"),
+			.init(reason: "Disgusting vile rule breaker!", source: "Automated test", ip: "127.0.0.2"),
+		]) == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "127.0.0.2"), MSMP.IPBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", ip: "127.0.0.1")])
+
+		#expect(try await connection.addToIPBanlist(.init(reason: "Crimes against humanity", source: "Automated test", ip: "127.0.0.3")) == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "127.0.0.2"), MSMP.IPBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", ip: "127.0.0.1")])
+
+		#expect(try await connection.removeFromIPBanlist("127.0.0.1") == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "127.0.0.2")])
+
+		#expect(try await connection.clearIPBanlist() == [])
+		
+		#expect(try await connection.setIPBanlist(to: originalBanlist) == originalBanlist)
+	}
 }
