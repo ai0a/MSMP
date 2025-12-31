@@ -67,6 +67,39 @@ public actor Connection {
 		return try response.recode(to: [Player].self)
 	}
 
+	public func getBanlist() async throws -> [UserBan] {
+		let response = try await request("minecraft:bans")
+		return try response.recode(to: [UserBan].self)
+	}
+
+	public func setBanlist(to bans: [UserBan]) async throws -> [UserBan] {
+		let response = try await request("minecraft:bans/set", params: .named(["bans": JSONValue(recoding: bans)]))
+		return try response.recode(to: [UserBan].self)
+	}
+
+	public func addToBanlist(from players: [UserBan]) async throws -> [UserBan] {
+		let response = try await request("minecraft:bans/add", params: .named(["add": JSONValue(recoding: players)]))
+		return try response.recode(to: [UserBan].self)
+	}
+
+	public func addToBanlist(_ player: UserBan) async throws -> [UserBan] {
+		try await addToBanlist(from: [player])
+	}
+
+	public func removeFromBanlist(from players: [Player]) async throws -> [UserBan] {
+		let response = try await request("minecraft:bans/remove", params: .named(["remove": JSONValue(recoding: players)]))
+		return try response.recode(to: [UserBan].self)
+	}
+
+	public func removeFromBanlist(_ player: Player) async throws -> [UserBan] {
+		try await removeFromBanlist(from: [player])
+	}
+
+	public func clearBanlist() async throws -> [UserBan] {
+		let response = try await request("minecraft:bans/clear")
+		return try response.recode(to: [UserBan].self)
+	}
+
 	public func getStatus() async throws -> ServerState {
 		let response = try await request("minecraft:server/status")
 		return try response.recode(to: ServerState.self)

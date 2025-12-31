@@ -36,4 +36,20 @@ import MSMP
 
 		#expect(try await connection.setAllowlist(to: originalAllowlist) == originalAllowlist)
 	}
+
+	@Test func testBanlist() async throws {
+		let originalBanlist = try await connection.getBanlist()
+		#expect(try await connection.setBanlist(to: [
+			.init(reason: "Get banned lmao!", source: "Automated test", player: Player(name: "jeb_")),
+			.init(reason: "Disgusting vile rule breaker!", source: "Automated test", player: Player(name: "steve")),
+		]) == [MSMP.UserBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", player: MSMP.Player(name: "Steve", id: Optional("8667ba71-b85a-4004-af54-457a9734eed7"))), MSMP.UserBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", player: MSMP.Player(name: "jeb_", id: Optional("853c80ef-3c37-49fd-aa49-938b674adae6")))])
+
+		#expect(try await connection.addToBanlist(.init(reason: "Crimes against humanity", source: "Automated test", player: "geminitay")) == [MSMP.UserBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", player: MSMP.Player(name: "Steve", id: Optional("8667ba71-b85a-4004-af54-457a9734eed7"))), MSMP.UserBan(reason: "Crimes against humanity", expires: nil, source: "Automated test", player: MSMP.Player(name: "GeminiTay", id: Optional("5a1839d2-cecc-4c85-aa08-b346f9f772a1"))), MSMP.UserBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", player: MSMP.Player(name: "jeb_", id: Optional("853c80ef-3c37-49fd-aa49-938b674adae6")))])
+
+		#expect(try await connection.removeFromBanlist("jeb_") == [MSMP.UserBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", player: MSMP.Player(name: "Steve", id: Optional("8667ba71-b85a-4004-af54-457a9734eed7"))), MSMP.UserBan(reason: "Crimes against humanity", expires: nil, source: "Automated test", player: MSMP.Player(name: "GeminiTay", id: Optional("5a1839d2-cecc-4c85-aa08-b346f9f772a1")))])
+
+		#expect(try await connection.clearBanlist() == [])
+		
+		#expect(try await connection.setBanlist(to: originalBanlist) == originalBanlist)
+	}
 }
