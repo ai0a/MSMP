@@ -395,6 +395,16 @@ public actor Connection {
 		return try response.recode(to: Int.self)
 	}
 
+	public func getGamerules() async throws -> [TypedGamerule] {
+		let response = try await request("minecraft:gamerules")
+		return try response.recode(to: [TypedGamerule].self)
+	}
+
+	public func updateGamerule(_ gamerule: UntypedGamerule) async throws -> TypedGamerule {
+		let response = try await request("minecraft:gamerules/update", params: .named(["gamerule": JSONValue(recoding: gamerule)]))
+		return try response.recode(to: TypedGamerule.self)
+	}
+
 	private var nextID = 0
 	private var continuations = [Int:CheckedContinuation<JSONValue, Swift.Error>]()
 
