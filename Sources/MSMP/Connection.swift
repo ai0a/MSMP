@@ -34,6 +34,39 @@ public actor Connection {
 		case disconnected(code: Int, reason: Data?)
 	}
 
+	public func getAllowlist() async throws -> [Player] {
+		let response = try await request("minecraft:allowlist")
+		return try response.recode(to: [Player].self)
+	}
+
+	public func setAllowlist(to players: [Player]) async throws -> [Player] {
+		let response = try await request("minecraft:allowlist/set", params: .named(["players": JSONValue(recoding: players)]))
+		return try response.recode(to: [Player].self)
+	}
+
+	public func addToAllowlist(from players: [Player]) async throws -> [Player] {
+		let response = try await request("minecraft:allowlist/add", params: .named(["add": JSONValue(recoding: players)]))
+		return try response.recode(to: [Player].self)
+	}
+
+	public func addToAllowlist(_ player: Player) async throws -> [Player] {
+		try await addToAllowlist(from: [player])
+	}
+
+	public func removeFromAllowlist(from players: [Player]) async throws -> [Player] {
+		let response = try await request("minecraft:allowlist/remove", params: .named(["remove": JSONValue(recoding: players)]))
+		return try response.recode(to: [Player].self)
+	}
+
+	public func removeFromAllowlist(_ player: Player) async throws -> [Player] {
+		try await removeFromAllowlist(from: [player])
+	}
+
+	public func clearAllowlist() async throws -> [Player] {
+		let response = try await request("minecraft:allowlist/clear")
+		return try response.recode(to: [Player].self)
+	}
+
 	public func getStatus() async throws -> ServerState {
 		let response = try await request("minecraft:server/status")
 		return try response.recode(to: ServerState.self)
