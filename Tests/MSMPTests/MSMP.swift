@@ -5,19 +5,52 @@ import MSMP
 @Suite struct Tests {
 	let connection: Connection
 
+	let ip = "localhost"
+
 	init() async throws {
-		connection = try await Connection(to: "localhost", port: 1337, secret: "H4QULuJARuL1xICrINfq5wWqoChwkwzWXErTCFeC")
+		connection = try await Connection(to: ip, port: 1337, secret: "H4QULuJARuL1xICrINfq5wWqoChwkwzWXErTCFeC")
 	}
 
 	@Test func testServer() async throws {
+		guard let player = try await TestPlayer(ip: ip, port: 25565, username: "testServer") else {
+			#expect(Bool(false))
+			return
+		}
+		try await Task.sleep(for: .seconds(1))
+		
 		let status = try await connection.getStatus()
+		#expect(status.players?.contains { $0.name == "testServer" } ?? false)
 		#expect(status == ServerState(players: status.players, isStarted: true, version: MSMP.Version(protocol: 773, name: "1.21.9")))
 		#expect(try await connection.save(flush: false))
 		#expect(try await connection.save(flush: true))
-		#expect(try await connection.send(systemMessage: .init(receivingPlayers: status.players, isOverlay: false, message: "Test message")))
-		print("All players should have seen a chat message saying 'Test message'")
-		#expect(try await connection.send(systemMessage: .init(receivingPlayers: status.players, isOverlay: true, message: "Test overlay")))
-		print("All players should have seen an overlay message saying 'Test overlay'")
+		try await withThrowingTaskGroup(of: Bool.self) { taskGroup in
+			taskGroup.addTask {
+				let (receivedMessage, isOverlay) = await player.nextChatMessage()
+				return receivedMessage == "Test message" && !isOverlay
+			}
+			taskGroup.addTask {
+				try await Task.sleep(for: .seconds(0.1))
+				return try await connection.send(systemMessage: .init(receivingPlayers: status.players, isOverlay: false, message: "Test message"))
+			}
+			for try await result in taskGroup {
+				#expect(result)
+			}
+		}
+		try await withThrowingTaskGroup(of: Bool.self) { taskGroup in
+			taskGroup.addTask {
+				let (receivedMessage, isOverlay) = await player.nextChatMessage()
+				return receivedMessage == "Test overlay" && isOverlay
+			}
+			taskGroup.addTask {
+				try await Task.sleep(for: .seconds(0.1))
+				return try await connection.send(systemMessage: .init(receivingPlayers: status.players, isOverlay: true, message: "Test overlay"))
+			}
+			for try await result in taskGroup {
+				#expect(result)
+			}
+		}
+
+		try await player.disconnect()
 	}
 
 	@Test func testAllowlist() async throws {
@@ -56,13 +89,13 @@ import MSMP
 	@Test func testIPBanlist() async throws {
 		let originalBanlist = try await connection.getIPBanlist()
 		#expect(try await connection.setIPBanlist(to: [
-			.init(reason: "Get banned lmao!", source: "Automated test", ip: "127.0.0.1"),
-			.init(reason: "Disgusting vile rule breaker!", source: "Automated test", ip: "127.0.0.2"),
-		]) == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "127.0.0.2"), MSMP.IPBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", ip: "127.0.0.1")])
+			.init(reason: "Get banned lmao!", source: "Automated test", ip: "192.192.0.1"),
+			.init(reason: "Disgusting vile rule breaker!", source: "Automated test", ip: "192.192.0.2"),
+		]) == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "192.192.0.2"), MSMP.IPBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", ip: "192.192.0.1")])
 
-		#expect(try await connection.addToIPBanlist(.init(reason: "Crimes against humanity", source: "Automated test", ip: "127.0.0.3")) == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "127.0.0.2"), MSMP.IPBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", ip: "127.0.0.1")])
+		#expect(try await connection.addToIPBanlist(.init(reason: "Crimes against humanity", source: "Automated test", ip: "192.192.0.3")) == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "192.192.0.2"), MSMP.IPBan(reason: "Get banned lmao!", expires: nil, source: "Automated test", ip: "192.192.0.1")])
 
-		#expect(try await connection.removeFromIPBanlist("127.0.0.1") == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "127.0.0.2")])
+		#expect(try await connection.removeFromIPBanlist("192.192.0.1") == [MSMP.IPBan(reason: "Disgusting vile rule breaker!", expires: nil, source: "Automated test", ip: "192.192.0.2")])
 
 		#expect(try await connection.clearIPBanlist() == [])
 		
