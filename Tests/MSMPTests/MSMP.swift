@@ -77,4 +77,17 @@ import MSMP
 		// TODO: Actually test this for proper response, right now though the ip ban tests are interfering
 		let _ = try await connection.kickPlayers([.init(player: players[0], message: "Get kicked loser")])
 	}
+
+	@Test func testOperators() async throws {
+		let originalOperators = try await connection.getOpList()
+		#expect(try await connection.setOpList(to: [.init(permissionLevel: 1, bypassesPlayerLimit: true, player: "herobrine")]) == [MSMP.Operator(permissionLevel: 1, bypassesPlayerLimit: true, player: MSMP.Player(name: "Herobrine", id: Optional("f84c6a79-0a4e-45e0-879b-cd49ebd4c4e2")))])
+
+		#expect(try await connection.addToOpList(Operator(permissionLevel: 2, bypassesPlayerLimit: false, player: "geminitay")) == [MSMP.Operator(permissionLevel: 1, bypassesPlayerLimit: true, player: MSMP.Player(name: "Herobrine", id: Optional("f84c6a79-0a4e-45e0-879b-cd49ebd4c4e2"))), MSMP.Operator(permissionLevel: 2, bypassesPlayerLimit: false, player: MSMP.Player(name: "GeminiTay", id: Optional("5a1839d2-cecc-4c85-aa08-b346f9f772a1")))])
+
+		#expect(try await connection.removeFromOpList("herobrine") == [MSMP.Operator(permissionLevel: 2, bypassesPlayerLimit: false, player: MSMP.Player(name: "GeminiTay", id: Optional("5a1839d2-cecc-4c85-aa08-b346f9f772a1")))])
+
+		#expect(try await connection.clearOpList() == [])
+		
+		#expect(try await connection.setOpList(to: originalOperators) == originalOperators)
+	}
 }

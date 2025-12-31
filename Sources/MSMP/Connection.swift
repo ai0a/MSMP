@@ -144,6 +144,39 @@ public actor Connection {
 		return try response.recode(to: [Player].self)
 	}
 
+	public func getOpList() async throws -> [Operator] {
+		let response = try await request("minecraft:operators")
+		return try response.recode(to: [Operator].self)
+	}
+
+	public func setOpList(to bans: [Operator]) async throws -> [Operator] {
+		let response = try await request("minecraft:operators/set", params: .named(["operators": JSONValue(recoding: bans)]))
+		return try response.recode(to: [Operator].self)
+	}
+
+	public func addToOpList(from players: [Operator]) async throws -> [Operator] {
+		let response = try await request("minecraft:operators/add", params: .named(["add": JSONValue(recoding: players)]))
+		return try response.recode(to: [Operator].self)
+	}
+
+	public func addToOpList(_ player: Operator) async throws -> [Operator] {
+		try await addToOpList(from: [player])
+	}
+
+	public func removeFromOpList(from players: [Player]) async throws -> [Operator] {
+		let response = try await request("minecraft:operators/remove", params: .named(["remove": JSONValue(recoding: players)]))
+		return try response.recode(to: [Operator].self)
+	}
+
+	public func removeFromOpList(_ player: Player) async throws -> [Operator] {
+		try await removeFromOpList(from: [player])
+	}
+
+	public func clearOpList() async throws -> [Operator] {
+		let response = try await request("minecraft:operators/clear")
+		return try response.recode(to: [Operator].self)
+	}
+
 	public func getStatus() async throws -> ServerState {
 		let response = try await request("minecraft:server/status")
 		return try response.recode(to: ServerState.self)
