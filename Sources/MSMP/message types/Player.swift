@@ -7,3 +7,9 @@ public struct Player: Codable, Equatable, Sendable {
 		self.id = id
 	}
 }
+
+extension Player: ExpressibleByStringLiteral {
+	public init(stringLiteral value: String) {
+		self.init(name: value)
+	}
+}
