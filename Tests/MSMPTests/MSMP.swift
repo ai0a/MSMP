@@ -90,4 +90,90 @@ import MSMP
 		
 		#expect(try await connection.setOpList(to: originalOperators) == originalOperators)
 	}
+
+	@Test func testServersettings() async throws {
+		#expect(try await connection.getAutosaveIsEnabled())
+		#expect(try await connection.setAutosaveIsEnabled(to: false) == false)
+		#expect(try await connection.setAutosaveIsEnabled(to: true))
+
+		#expect(try await connection.getDifficulty() == .easy)
+		#expect(try await connection.setDifficulty(to: .peaceful) == .peaceful)
+		#expect(try await connection.setDifficulty(to: .normal) == .normal)
+		#expect(try await connection.setDifficulty(to: .hard) == .hard)
+		#expect(try await connection.setDifficulty(to: .easy) == .easy)
+
+		#expect(try await connection.getAllowlistIsEnforced() == false)
+		#expect(try await connection.setAllowlistIsEnforced(to: true))
+		#expect(try await connection.setAllowlistIsEnforced(to: false) == false)
+
+		#expect(try await connection.getAllowlistIsUsed() == false)
+		#expect(try await connection.setAllowlistIsUsed(to: true))
+		#expect(try await connection.setAllowlistIsUsed(to: false) == false)
+
+		#expect(try await connection.getMaxPlayers() == 20)
+		#expect(try await connection.setMaxPlayers(to: 40) == 40)
+		#expect(try await connection.setMaxPlayers(to: 20) == 20)
+
+		#expect(try await connection.getPauseWhenEmptySeconds() == 60)
+		#expect(try await connection.setPauseWhenEmptySeconds(to: 40) == 40)
+		#expect(try await connection.setPauseWhenEmptySeconds(to: 60) == 60)
+
+		#expect(try await connection.getPlayerIdleTimeout() == 0)
+		#expect(try await connection.setPlayerIdleTimeout(to: 40) == 40)
+		#expect(try await connection.setPlayerIdleTimeout(to: 0) == 0)
+
+		#expect(try await connection.getAllowFlight() == false)
+		#expect(try await connection.setAllowFlight(to: true))
+		#expect(try await connection.setAllowFlight(to: false) == false)
+
+		#expect(try await connection.getMOTD() == "A Minecraft Server")
+		#expect(try await connection.setMOTD(to: "Epic MOTD") == "Epic MOTD")
+		#expect(try await connection.setMOTD(to: "A Minecraft Server") == "A Minecraft Server")
+
+		#expect(try await connection.getSpawnProtectionRadius() == 16)
+		#expect(try await connection.setSpawnProtectionRadius(to: 20) == 20)
+		#expect(try await connection.setSpawnProtectionRadius(to: 16) == 16)
+
+		#expect(try await connection.getForceGamemode() == false)
+		#expect(try await connection.setForceGamemode(to: true))
+		#expect(try await connection.setForceGamemode(to: false) == false)
+
+		#expect(try await connection.getGamemode() == .survival)
+		#expect(try await connection.setGamemode(to: .creative) == .creative)
+		#expect(try await connection.setGamemode(to: .adventure) == .adventure)
+		#expect(try await connection.setGamemode(to: .spectator) == .spectator)
+		#expect(try await connection.setGamemode(to: .survival) == .survival)
+
+		#expect(try await connection.getViewDistance() == 10)
+		#expect(try await connection.setViewDistance(to: 20) == 20)
+		#expect(try await connection.setViewDistance(to: 10) == 10)
+
+		#expect(try await connection.getSimulationDistance() == 10)
+		#expect(try await connection.setSimulationDistance(to: 20) == 20)
+		#expect(try await connection.setSimulationDistance(to: 10) == 10)
+
+		#expect(try await connection.getAcceptTransfers() == false)
+		#expect(try await connection.setAcceptTransfers(to: true))
+		#expect(try await connection.setAcceptTransfers(to: false) == false)
+
+		#expect(try await connection.getStatusHeatbeatInterval() == 0)
+		#expect(try await connection.setStatusHeatbeatInterval(to: 20) == 20)
+		#expect(try await connection.setStatusHeatbeatInterval(to: 0) == 0)
+
+		#expect(try await connection.getOperatorUserPermissionLevel() == 4)
+		#expect(try await connection.setOperatorUserPermissionLevel(to: 5) == 5)
+		#expect(try await connection.setOperatorUserPermissionLevel(to: 4) == 4)
+
+		#expect(try await connection.getHideOnlinePlayers() == false)
+		#expect(try await connection.setHideOnlinePlayers(to: true))
+		#expect(try await connection.setHideOnlinePlayers(to: false) == false)
+
+		#expect(try await connection.getStatusReplies())
+		#expect(try await connection.setStatusReplies(to: false) == false)
+		#expect(try await connection.setStatusReplies(to: true))
+
+		#expect(try await connection.getEntityBroadcastRange() == 100)
+		#expect(try await connection.setEntityBroadcastRange(to: 20) == 20)
+		#expect(try await connection.setEntityBroadcastRange(to: 100) == 100)
+	}
 }

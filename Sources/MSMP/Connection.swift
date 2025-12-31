@@ -195,6 +195,206 @@ public actor Connection {
 		return try response.recode(to: Bool.self)
 	}
 
+	public func getAutosaveIsEnabled() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/autosave")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setAutosaveIsEnabled(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/autosave/set", params: .named(["enable": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getDifficulty() async throws -> Difficulty {
+		let response = try await request("minecraft:serversettings/difficulty")
+		return Difficulty(rawValue: try response.recode(to: String.self)) ?? .peaceful
+	}
+
+	public func setDifficulty(to value: Difficulty) async throws -> Difficulty {
+		let response = try await request("minecraft:serversettings/difficulty/set", params: .named(["difficulty": JSONValue(recoding: value.rawValue)]))
+		return Difficulty(rawValue: try response.recode(to: String.self)) ?? .peaceful
+	}
+
+	public func getAllowlistIsEnforced() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/enforce_allowlist")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setAllowlistIsEnforced(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/enforce_allowlist/set", params: .named(["enforce": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getAllowlistIsUsed() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/use_allowlist")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setAllowlistIsUsed(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/use_allowlist/set", params: .named(["use": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getMaxPlayers() async throws -> Int {
+		let response = try await request("minecraft:serversettings/max_players")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setMaxPlayers(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/max_players/set", params: .named(["max": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getPauseWhenEmptySeconds() async throws -> Int {
+		let response = try await request("minecraft:serversettings/pause_when_empty_seconds")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setPauseWhenEmptySeconds(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/pause_when_empty_seconds/set", params: .named(["seconds": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getPlayerIdleTimeout() async throws -> Int {
+		let response = try await request("minecraft:serversettings/player_idle_timeout")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setPlayerIdleTimeout(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/player_idle_timeout/set", params: .named(["seconds": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getAllowFlight() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/allow_flight")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setAllowFlight(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/allow_flight/set", params: .named(["allow": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getMOTD() async throws -> String {
+		let response = try await request("minecraft:serversettings/motd")
+		return try response.recode(to: String.self)
+	}
+
+	public func setMOTD(to value: String) async throws -> String {
+		let response = try await request("minecraft:serversettings/motd/set", params: .named(["message": JSONValue(recoding: value)]))
+		return try response.recode(to: String.self)
+	}
+
+	public func getSpawnProtectionRadius() async throws -> Int {
+		let response = try await request("minecraft:serversettings/spawn_protection_radius")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setSpawnProtectionRadius(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/spawn_protection_radius/set", params: .named(["radius": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getForceGamemode() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/force_game_mode")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setForceGamemode(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/force_game_mode/set", params: .named(["force": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getGamemode() async throws -> Gamemode {
+		let response = try await request("minecraft:serversettings/game_mode")
+		return Gamemode(rawValue: try response.recode(to: String.self)) ?? .adventure
+	}
+
+	public func setGamemode(to value: Gamemode) async throws -> Gamemode {
+		let response = try await request("minecraft:serversettings/game_mode/set", params: .named(["mode": JSONValue(recoding: value.rawValue)]))
+		return Gamemode(rawValue: try response.recode(to: String.self)) ?? .adventure
+	}
+
+	public func getViewDistance() async throws -> Int {
+		let response = try await request("minecraft:serversettings/view_distance")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setViewDistance(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/view_distance/set", params: .named(["distance": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getSimulationDistance() async throws -> Int {
+		let response = try await request("minecraft:serversettings/simulation_distance")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setSimulationDistance(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/simulation_distance/set", params: .named(["distance": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getAcceptTransfers() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/accept_transfers")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setAcceptTransfers(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/accept_transfers/set", params: .named(["accept": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getStatusHeatbeatInterval() async throws -> Int {
+		let response = try await request("minecraft:serversettings/status_heartbeat_interval")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setStatusHeatbeatInterval(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/status_heartbeat_interval/set", params: .named(["seconds": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getOperatorUserPermissionLevel() async throws -> Int {
+		let response = try await request("minecraft:serversettings/operator_user_permission_level")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setOperatorUserPermissionLevel(to value: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/operator_user_permission_level/set", params: .named(["level": JSONValue(recoding: value)]))
+		return try response.recode(to: Int.self)
+	}
+
+	public func getHideOnlinePlayers() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/hide_online_players")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setHideOnlinePlayers(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/hide_online_players/set", params: .named(["hide": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getStatusReplies() async throws -> Bool {
+		let response = try await request("minecraft:serversettings/status_replies")
+		return try response.recode(to: Bool.self)
+	}
+
+	public func setStatusReplies(to value: Bool) async throws -> Bool {
+		let response = try await request("minecraft:serversettings/status_replies/set", params: .named(["enable": JSONValue(recoding: value)]))
+		return try response.recode(to: Bool.self)
+	}
+
+	public func getEntityBroadcastRange() async throws -> Int {
+		let response = try await request("minecraft:serversettings/entity_broadcast_range")
+		return try response.recode(to: Int.self)
+	}
+
+	public func setEntityBroadcastRange(to percentagePoints: Int) async throws -> Int {
+		let response = try await request("minecraft:serversettings/entity_broadcast_range/set", params: .named(["percentage_points": JSONValue(recoding: percentagePoints)]))
+		return try response.recode(to: Int.self)
+	}
+
 	private var nextID = 0
 	private var continuations = [Int:CheckedContinuation<JSONValue, Swift.Error>]()
 
