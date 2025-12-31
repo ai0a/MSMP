@@ -68,4 +68,13 @@ import MSMP
 		
 		#expect(try await connection.setIPBanlist(to: originalBanlist) == originalBanlist)
 	}
+
+	@Test func testPlayers() async throws {
+		let players = try await connection.getAllConnectedPlayers()
+		guard players.count > 0 else {
+			return
+		}
+		// TODO: Actually test this for proper response, right now though the ip ban tests are interfering
+		let _ = try await connection.kickPlayers([.init(player: players[0], message: "Get kicked loser")])
+	}
 }

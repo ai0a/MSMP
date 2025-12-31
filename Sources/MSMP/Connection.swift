@@ -133,6 +133,17 @@ public actor Connection {
 		return try response.recode(to: [IPBan].self)
 	}
 
+	public func getAllConnectedPlayers() async throws -> [Player] {
+		let response = try await request("minecraft:players")
+		return try response.recode(to: [Player].self)
+	}
+
+	// Returns an array of players that GOT KICKED, *NOT* that remain
+	public func kickPlayers(_ players: [Kick]) async throws -> [Player] {
+		let response = try await request("minecraft:players/kick", params: .named(["kick": JSONValue(recoding: players)]))
+		return try response.recode(to: [Player].self)
+	}
+
 	public func getStatus() async throws -> ServerState {
 		let response = try await request("minecraft:server/status")
 		return try response.recode(to: ServerState.self)
