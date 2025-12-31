@@ -39,6 +39,14 @@ public actor Connection {
 		return try response.recode(to: ServerState.self)
 	}
 
+	/// Send a `save` request
+	/// - Parameter flush: Whether to flush the saved changes
+	/// - Returns: Whether the server is saving or not
+	public func save(flush: Bool) async throws -> Bool {
+		let response = try await request("minecraft:server/save", params: .named(["flush":.boolean(flush)]))
+		return try response.recode(to: Bool.self)
+	}
+
 	private var nextID = 0
 	private var continuations = [Int:CheckedContinuation<JSONValue, Swift.Error>]()
 
