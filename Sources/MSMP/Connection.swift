@@ -47,6 +47,11 @@ public actor Connection {
 		return try response.recode(to: Bool.self)
 	}
 
+	public func send(systemMessage: SystemMessage) async throws -> Bool {
+		let response = try await request("minecraft:server/system_message", params: .named(["message":.init(recoding: systemMessage)]))
+		return try response.recode(to: Bool.self)
+	}
+
 	private var nextID = 0
 	private var continuations = [Int:CheckedContinuation<JSONValue, Swift.Error>]()
 

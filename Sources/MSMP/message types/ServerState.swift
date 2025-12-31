@@ -1,7 +1,7 @@
 public struct ServerState: Codable, Equatable, Sendable {
-	let players: [Player]?
-	let isStarted: Bool
-	let version: Version
+	public let players: [Player]?
+	public let isStarted: Bool
+	public let version: Version
 
 	public init(players: [Player]? = nil, isStarted: Bool, version: Version) {
 		self.players = players

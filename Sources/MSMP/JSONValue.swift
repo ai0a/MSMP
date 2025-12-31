@@ -50,6 +50,12 @@ public enum JSONValue: Codable, Equatable, Sendable {
         let decoder = JSONDecoder()
         return try decoder.decode(T.self, from: try encoder.encode(self))
     }
+
+    public init<T: Encodable>(recoding other: T) throws {
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        self = try decoder.decode(Self.self, from: try encoder.encode(other))
+    }
 }
 
 extension JSONValue: CustomStringConvertible {

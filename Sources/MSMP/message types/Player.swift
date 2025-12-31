@@ -1,4 +1,4 @@
 public struct Player: Codable, Equatable, Sendable {
-	let name: String
-	let id: String?
+	public let name: String
+	public let id: String?
 }
