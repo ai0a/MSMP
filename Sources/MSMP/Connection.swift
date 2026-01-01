@@ -9,16 +9,18 @@ public actor Connection {
 			var request = URLRequest(url: url)
 			request.setValue("Bearer \(secret)", forHTTPHeaderField: "Authorization")
 			connection = WebsocketConnection(url: request) { message in
-				guard let continuation = await self.continuations[message.id] else {
-					print("Got unexpected message \(message)")
+				guard let continuation = await self.continuations[message.id ?? -1] else {
+					print("Got notification \(message)")
 					return
 				}
-				await self.removeContinuation(forId: message.id)
+				await self.removeContinuation(forId: message.id ?? -1)
 				switch message {
 				case let .result(_, result):
 					continuation.resume(returning: result)
 				case let .error(_, error):
 					continuation.resume(throwing: error)
+				case .notification:
+					fatalError("Got a notification with an id, this should never be possible")
 				}
 			} connectHandler: {
 				connectionContinuation.resume(returning: ())

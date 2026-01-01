@@ -1,11 +1,13 @@
 enum JSONRPCResponse: Codable {
 	case result(id: Int, JSONValue)
 	case error(id: Int, JSONRPCError)
+	case notification(JSONRPCRequest)
 
-	public var id: Int {
+	public var id: Int? {
 		switch self {
 		case let .result(id, _): id
 		case let .error(id, _): id
+		case .notification: nil
 		}
 	}
 
@@ -17,7 +19,11 @@ enum JSONRPCResponse: Codable {
 
 	public init(from decoder: any Decoder) throws {
 		let container = try decoder.container(keyedBy: CodingKeys.self)
-		let id = try container.decode(Int.self, forKey: .id)
+		let id = try container.decodeIfPresent(Int.self, forKey: .id)
+		guard let id else {
+			self = .notification(try JSONRPCRequest(from: decoder))
+			return
+		}
 		if let error = try? container.decode(JSONRPCError.self, forKey: .error) {
 			self = .error(id: id, error)
 			return
@@ -27,12 +33,16 @@ enum JSONRPCResponse: Codable {
 
 	public func encode(to encoder: any Encoder) throws {
 		var container = encoder.container(keyedBy: CodingKeys.self)
-		try container.encode(id, forKey: .id)
+		if let id {
+			try container.encode(id, forKey: .id)
+		}
 		switch self {
 		case let .error(id: _, error):
 			try container.encode(error, forKey: .error)
 		case let .result(id: _, result):
 			try container.encode(result, forKey: .result)
+		case let .notification(request):
+			try request.encode(to: encoder)
 		}
 	}
 }
