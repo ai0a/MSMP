@@ -12,33 +12,21 @@ private actor Isolated<T> {
 }
 
 public actor Connection {
+	private var url: URL
+	private var secret: String
+	
 	public init(to host: String, port: UInt16, secret: String) async throws {
 		guard let url = URL(string: "ws://\(host):\(port)") else {
 			throw Error.badURL
 		}
+		self.url = url
+		self.secret = secret
 		try await withCheckedThrowingContinuation { connectionContinuation in
 			var request = URLRequest(url: url)
 			request.setValue("Bearer \(secret)", forHTTPHeaderField: "Authorization")
 			let hasResumed = Isolated(false)
 			connection = WebsocketConnection(url: request) { message in
-				guard let continuation = await self.continuations[message.id ?? -1] else {
-					switch message {
-					case let .notification(request):
-						try await self.handleNotification(request)
-					default:
-						print("Got unexpected non-notification message \(message)")
-					}
-					return
-				}
-				await self.removeContinuation(forId: message.id ?? -1)
-				switch message {
-				case let .result(_, result):
-					continuation.resume(returning: result)
-				case let .error(_, error):
-					continuation.resume(throwing: error)
-				case .notification:
-					fatalError("Got a notification with an id, this should never be possible")
-				}
+				try await self.handleIncomingMessage(message)
 			} connectHandler: {
 				if await hasResumed.value {
 					return
@@ -61,6 +49,7 @@ public actor Connection {
 		/// Bad secret?
 		case disconnected(code: Int, reason: Data?)
 		case alreadyWaitingForNotification
+		case alreadyConnected
 	}
 
 	public var nextNotification: Notification {
@@ -93,6 +82,33 @@ public actor Connection {
 	public var isConnected: Bool {
 		get async {
 			await connection.isActive
+		}
+	}
+
+	public func reconnect() async throws {
+		guard await !isConnected else {
+			throw Error.alreadyConnected
+		}
+		try await withCheckedThrowingContinuation { connectionContinuation in
+			var request = URLRequest(url: url)
+			request.setValue("Bearer \(secret)", forHTTPHeaderField: "Authorization")
+			let hasResumed = Isolated(false)
+			connection = WebsocketConnection(url: request) { message in
+				try await self.handleIncomingMessage(message)
+			} connectHandler: {
+				if await hasResumed.value {
+					return
+				}
+				await hasResumed.set(to: true)
+				connectionContinuation.resume(returning: ())
+			} disconnectHandler: { code, data in
+				await self.handleDisconnection(code, reason: data)
+				if await hasResumed.value {
+					return
+				}
+				await hasResumed.set(to: true)
+				connectionContinuation.resume(throwing: Error.disconnected(code: code, reason: data))
+			}
 		}
 	}
 
@@ -472,6 +488,27 @@ public actor Connection {
 		return try response.recode(to: TypedGamerule.self)
 	}
 
+	private func handleIncomingMessage(_ message: JSONRPCResponse) throws {
+		guard let continuation = self.continuations[message.id ?? -1] else {
+			switch message {
+			case let .notification(request):
+				try self.handleNotification(request)
+			default:
+				print("Got unexpected non-notification message \(message)")
+			}
+			return
+		}
+		self.removeContinuation(forId: message.id ?? -1)
+		switch message {
+		case let .result(_, result):
+			continuation.resume(returning: result)
+		case let .error(_, error):
+			continuation.resume(throwing: error)
+		case .notification:
+			fatalError("Got a notification with an id, this should never be possible")
+		}
+	}
+
 	private var nextID = 0
 	private var continuations = [Int:CheckedContinuation<JSONValue, Swift.Error>]()
 
@@ -510,6 +547,7 @@ public actor Connection {
 		}
 		notificationQueue.append(parsedNotification)
 		if let nextNotificationContinuation {
+			self.nextNotificationContinuation = nil
 			nextNotificationContinuation.resume()
 		}
 	}
@@ -518,6 +556,7 @@ public actor Connection {
 
 	private func handleDisconnection(_ code: Int, reason: Data?) {
 		if let nextNotificationContinuation {
+			self.nextNotificationContinuation = nil
 			nextNotificationContinuation.resume(throwing: Error.disconnected(code: code, reason: reason))
 		}
 	}
