@@ -90,6 +90,12 @@ public actor Connection {
 		}
 	}
 
+	public var isConnected: Bool {
+		get async {
+			await connection.isActive
+		}
+	}
+
 	public func getAllowlist() async throws -> [Player] {
 		let response = try await request("minecraft:allowlist")
 		return try response.recode(to: [Player].self)
