@@ -11,6 +11,58 @@ import MSMP
 		connection = try await Connection(to: ip, port: 1337, secret: "H4QULuJARuL1xICrINfq5wWqoChwkwzWXErTCFeC")
 	}
 
+	/// What notifications will naturally show up over the course of the entire test suite?
+	enum NaturalNotification: CaseIterable {
+		case allowlistAdded
+		case allowlistRemoved
+		case bansAdded
+		// case bansRemoved
+		case ipBansAdded
+		case ipBansRemoved
+		case operatorAdded
+		case operatorRemoved
+		case gamerulesUpdated
+		case playerJoined
+		case serverSaved
+		case serverSaving
+		case serverStopping
+		case playerLeft
+	}
+
+	@Test func testNotifications() async throws {
+		var seenNotifications = Set<NaturalNotification>()
+		while let notification = try? await connection.nextNotification {
+			guard let expectedNotificationType: NaturalNotification = switch notification {
+			case .allowlistAdded: .allowlistAdded
+			case .allowlistRemoved: .allowlistRemoved
+			case .bansAdded: .bansAdded
+			// case .bansRemoved: .bansRemoved
+			case .ipBansAdded: .ipBansAdded
+			case .ipBansRemoved: .ipBansRemoved
+			case .operatorAdded: .operatorAdded
+			case .operatorRemoved: .operatorRemoved
+			case .gamerulesUpdated: .gamerulesUpdated
+			case .playerJoined: .playerJoined
+			case .serverSaved: .serverSaved
+			case .serverSaving: .serverSaving
+			case .serverStopping: .serverStopping
+			case .playerLeft: .playerLeft
+			default: nilFor(notification)
+			} else {
+				continue
+			}
+			seenNotifications.insert(expectedNotificationType)
+		}
+		for expected in NaturalNotification.allCases {
+			#expect(seenNotifications.contains(expected))
+		}
+	}
+
+	func nilFor<T, U>(_ t: T) -> U? {
+		print("UNEXPECTED NOTIFICATION", t)
+		return nil
+	}
+
 	@Test func testServer() async throws {
 		guard let player = try await TestPlayer(ip: ip, port: 25565, username: "testServer") else {
 			#expect(Bool(false))
@@ -51,6 +103,9 @@ import MSMP
 		}
 
 		try await player.disconnect()
+
+		try await Task.sleep(for: .seconds(5))
+		#expect(try await connection.stop())
 	}
 
 	@Test func testAllowlist() async throws {

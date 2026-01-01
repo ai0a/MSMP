@@ -1,5 +1,16 @@
 import Foundation
 
+private actor Isolated<T> {
+	var value: T
+	init(_ value: T) {
+		self.value = value
+	}
+
+	func set(to value: T) {
+		self.value = value
+	}
+}
+
 public actor Connection {
 	public init(to host: String, port: UInt16, secret: String) async throws {
 		guard let url = URL(string: "ws://\(host):\(port)") else {
@@ -8,9 +19,15 @@ public actor Connection {
 		try await withCheckedThrowingContinuation { connectionContinuation in
 			var request = URLRequest(url: url)
 			request.setValue("Bearer \(secret)", forHTTPHeaderField: "Authorization")
+			let hasResumed = Isolated(false)
 			connection = WebsocketConnection(url: request) { message in
 				guard let continuation = await self.continuations[message.id ?? -1] else {
-					print("Got notification \(message)")
+					switch message {
+					case let .notification(request):
+						try await self.handleNotification(request)
+					default:
+						print("Got unexpected non-notification message \(message)")
+					}
 					return
 				}
 				await self.removeContinuation(forId: message.id ?? -1)
@@ -23,8 +40,17 @@ public actor Connection {
 					fatalError("Got a notification with an id, this should never be possible")
 				}
 			} connectHandler: {
+				if await hasResumed.value {
+					return
+				}
+				await hasResumed.set(to: true)
 				connectionContinuation.resume(returning: ())
 			} disconnectHandler: { code, data in
+				await self.handleDisconnection(code, reason: data)
+				if await hasResumed.value {
+					return
+				}
+				await hasResumed.set(to: true)
 				connectionContinuation.resume(throwing: Error.disconnected(code: code, reason: data))
 			}
 		}
@@ -34,6 +60,34 @@ public actor Connection {
 		case badURL
 		/// Bad secret?
 		case disconnected(code: Int, reason: Data?)
+		case alreadyWaitingForNotification
+	}
+
+	public var nextNotification: Notification {
+		get async throws {
+			guard await connection.isActive else {
+				throw Error.disconnected(code: await connection.closeCode, reason: nil)
+			}
+			guard notificationQueue.isEmpty else {
+				let result = notificationQueue[0]
+				notificationQueue.removeFirst()
+				return result
+			}
+			
+			try await withCheckedThrowingContinuation { continuation in
+				Task {
+					do {
+						try setNextNotificationContinuation(to: continuation)
+					} catch let error {
+						continuation.resume(throwing: error)
+					}
+				}
+			}
+			nextNotificationContinuation = nil
+			let result = notificationQueue[0]
+			notificationQueue.removeFirst()
+			return result
+		}
 	}
 
 	public func getAllowlist() async throws -> [Player] {
@@ -434,5 +488,31 @@ public actor Connection {
 		}
 	}
 
+	private var notificationQueue = [Notification]()
+	private var nextNotificationContinuation: CheckedContinuation<Void, Swift.Error>? = nil
+
+	private func setNextNotificationContinuation(to continuation: CheckedContinuation<Void, Swift.Error>) throws {
+		guard self.nextNotificationContinuation == nil else {
+			throw Error.alreadyWaitingForNotification
+		}
+		nextNotificationContinuation = continuation
+	}
+
+	private func handleNotification(_ notification: JSONRPCRequest) throws {
+		guard let parsedNotification = try Notification(parsing: notification) else {
+			return
+		}
+		notificationQueue.append(parsedNotification)
+		if let nextNotificationContinuation {
+			nextNotificationContinuation.resume()
+		}
+	}
+
 	private var connection: WebsocketConnection<JSONRPCRequest, JSONRPCResponse>!
+
+	private func handleDisconnection(_ code: Int, reason: Data?) {
+		if let nextNotificationContinuation {
+			nextNotificationContinuation.resume(throwing: Error.disconnected(code: code, reason: reason))
+		}
+	}
 }

@@ -8,6 +8,18 @@ struct JSONRPCRequest: Codable {
 		case named([String: JSONValue])
 		case list([JSONValue])
 
+		public subscript(_ name: String, orPositional position: Int) -> JSONValue? {
+			switch self {
+			case let .named(dict):
+				return dict[name]
+			case let .list(list):
+				guard list.count > position else {
+					return nil
+				}
+				return list[position]
+			}
+		}
+
 		public init(from decoder: any Decoder) throws {
 			if var container = try? decoder.unkeyedContainer() {
 				var result = [JSONValue]()
