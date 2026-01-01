@@ -192,6 +192,11 @@ public actor Connection {
 		return try response.recode(to: Bool.self)
 	}
 
+	public func stop() async throws -> Bool {
+		let response = try await request("minecraft:server/stop")
+		return try response.recode(to: Bool.self)
+	}
+
 	public func send(systemMessage: SystemMessage) async throws -> Bool {
 		let response = try await request("minecraft:server/system_message", params: .named(["message":.init(recoding: systemMessage)]))
 		return try response.recode(to: Bool.self)
