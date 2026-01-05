@@ -14,7 +14,7 @@ public enum Notification: Equatable, Sendable {
 	case ipBansAdded(IPBan)
 	case ipBansRemoved(String)
 	case bansAdded(UserBan)
-	case bansRemoved(UserBan)
+	case bansRemoved(Player)
 	case gamerulesUpdated(TypedGamerule)
 	
 	init?(parsing request: JSONRPCRequest) throws {
@@ -83,7 +83,7 @@ public enum Notification: Equatable, Sendable {
 			guard let params = request.params, let stateValue = params["player", orPositional: 0] else {
 				return nil
 			}
-			self = .bansRemoved(try stateValue.recode(to: UserBan.self))
+			self = .bansRemoved(try stateValue.recode(to: Player.self))
 		case "minecraft:notification/gamerules/updated":
 			guard let params = request.params, let stateValue = params["gamerule", orPositional: 0] else {
 				return nil

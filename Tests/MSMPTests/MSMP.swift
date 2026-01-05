@@ -16,7 +16,7 @@ import MSMP
 		case allowlistAdded
 		case allowlistRemoved
 		case bansAdded
-		// case bansRemoved
+		case bansRemoved
 		case ipBansAdded
 		case ipBansRemoved
 		case operatorAdded
@@ -36,7 +36,7 @@ import MSMP
 			case .allowlistAdded: .allowlistAdded
 			case .allowlistRemoved: .allowlistRemoved
 			case .bansAdded: .bansAdded
-			// case .bansRemoved: .bansRemoved
+			case .bansRemoved: .bansRemoved
 			case .ipBansAdded: .ipBansAdded
 			case .ipBansRemoved: .ipBansRemoved
 			case .operatorAdded: .operatorAdded
