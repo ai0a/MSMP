@@ -15,8 +15,13 @@ public actor Connection {
 	private var url: URL
 	private var secret: String
 	
-	public init(to host: String, port: UInt16, secret: String) async throws {
-		guard let url = URL(string: "ws://\(host):\(port)") else {
+	public init(
+		to host: String,
+		port: UInt16,
+		secret: String,
+		tlsCertificate: Data? = nil
+	) async throws {
+		guard let url = URL(string: "\(tlsCertificate == nil ? "ws" : "wss")://\(host):\(port)") else {
 			throw Error.badURL
 		}
 		self.url = url
@@ -25,7 +30,7 @@ public actor Connection {
 			var request = URLRequest(url: url)
 			request.setValue("Bearer \(secret)", forHTTPHeaderField: "Authorization")
 			let hasResumed = Isolated(false)
-			connection = WebsocketConnection(url: request) { message in
+			connection = WebsocketConnection(url: request, certificate: tlsCertificate) { message in
 				try await self.handleIncomingMessage(message)
 			} connectHandler: {
 				if await hasResumed.value {
