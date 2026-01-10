@@ -1,7 +1,8 @@
 import Foundation
 
-final actor WebsocketConnection<Request: Codable, Response: Codable>: NSObject, URLSessionWebSocketDelegate {
+final actor WebsocketConnection<Request: Codable, Response: Codable>: NSObject, URLSessionDelegate, URLSessionWebSocketDelegate {
 	private let logAllPackets = false
+	private let certificate: Data?
 	
 	public typealias ReceiveHandler = @Sendable (Response) async throws -> Void
 	public typealias ConnectHandler = @Sendable () async -> Void
@@ -31,7 +32,14 @@ final actor WebsocketConnection<Request: Codable, Response: Codable>: NSObject, 
 		webSocketTask.cancel(with: closeCode, reason: nil)
 	}
 
-	public init(url: URLRequest, receiveHandler: @escaping ReceiveHandler, connectHandler: @escaping ConnectHandler, disconnectHandler: @escaping DisconnectHandler) {
+	public init(
+		url: URLRequest,
+		certificate: Data? = nil,
+		receiveHandler: @escaping ReceiveHandler,
+		connectHandler: @escaping ConnectHandler,
+		disconnectHandler: @escaping DisconnectHandler
+	) {
+		self.certificate = certificate
 		self.receiveHandler = receiveHandler
 		self.connectHandler = connectHandler
 		self.disconnectHandler = disconnectHandler
@@ -84,6 +92,38 @@ final actor WebsocketConnection<Request: Codable, Response: Codable>: NSObject, 
 	nonisolated func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
 		Task {
 			await connectHandler()
+		}
+	}
+
+	nonisolated func urlSession(
+		_ session: URLSession,
+		didReceive challenge: URLAuthenticationChallenge,
+		completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+	) {
+		guard let certificate else {
+			completionHandler(.performDefaultHandling, nil)
+			return
+		}
+		guard
+			let trust = challenge.protectionSpace.serverTrust,
+			SecTrustGetCertificateCount(trust) > 0,
+			let serverCertificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate]
+		else {
+			completionHandler(.cancelAuthenticationChallenge, nil)
+			return
+		}
+
+		// Extract and convert the server's certificates into `Data` objects
+		// for comparison with pinned certificates.
+		let serverCertificatesData = serverCertificates.map { SecCertificateCopyData($0) as Data }
+
+		// Check if any of the server's certificates match the pinned certificates.
+		if serverCertificatesData.contains(where: { $0 == certificate }) {
+			// A match was found! Use `.useCredential` to trust the server and proceed with the request.
+			completionHandler(.useCredential, URLCredential(trust: trust))
+		} else {
+			// No match was found. Cancel the authentication challenge to reject the server.
+			completionHandler(.cancelAuthenticationChallenge, nil)
 		}
 	}
 }
